@@ -3,11 +3,9 @@ import Stripe from "stripe";
 
 export async function POST() {
   const stripeKey = process.env.STRIPE_SECRET_KEY;
-  const keyPresent = !!stripeKey;
-  const keyLen = stripeKey ? stripeKey.length : 0;
 
   if (!stripeKey) {
-    return NextResponse.json({ url: "/?unlocked=true", debug: "no key", keyPresent, keyLen });
+    return NextResponse.json({ url: "/?unlocked=true" });
   }
 
   try {
@@ -29,7 +27,6 @@ export async function POST() {
 
     return NextResponse.json({ url: session.url });
   } catch (e) {
-    console.error("Stripe checkout error:", e);
-    return NextResponse.json({ url: "/?unlocked=true", error: String(e) });
+    return NextResponse.json({ url: "/?unlocked=true" });
   }
 }
