@@ -1,5 +1,4 @@
-import { Card } from "@/lib/cards";
-import { SUIT_SYMBOLS, SUIT_COLORS } from "@/lib/cards";
+import { Card, SUIT_COLORS, SUIT_SYMBOLS } from "@/lib/cards";
 
 interface CardViewProps {
   card: Card;
@@ -8,10 +7,19 @@ interface CardViewProps {
   small?: boolean;
 }
 
-export function CardView({ card, faceUp = false, selected = false, small = false }: CardViewProps) {
+export function CardView({
+  card,
+  faceUp = false,
+  selected = false,
+  small = false,
+}: CardViewProps) {
   const color = SUIT_COLORS[card.suit];
   const symbol = SUIT_SYMBOLS[card.suit];
-  const isFace = card.rank === "A" || card.rank === "K" || card.rank === "Q" || card.rank === "J";
+  const isFace =
+    card.rank === "A" ||
+    card.rank === "K" ||
+    card.rank === "Q" ||
+    card.rank === "J";
 
   const w = small ? "w-14" : "w-20";
   const h = small ? "h-[84px]" : "h-28";

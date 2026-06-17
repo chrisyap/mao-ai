@@ -1,22 +1,17 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+
 import {
+  canPlayBase,
   Card,
   createDeck,
-  shuffleDeck,
   dealCards,
-  canPlayBase,
+  shuffleDeck,
 } from "@/lib/cards";
-import {
-  GameState,
-  MaoRule,
-} from "@/lib/types";
-import {
-  generateRules,
-  validateMove,
-  getCpuPlay,
-} from "@/lib/mao-engine";
+import { generateRules, getCpuPlay, validateMove } from "@/lib/mao-engine";
+import { GameState, MaoRule } from "@/lib/types";
+
 import { CardView } from "./card-view";
 
 const INITIAL_HAND_SIZE = 7;
@@ -61,6 +56,8 @@ export function MaoGame() {
     by: "player" | "cpu";
   } | null>(null);
 
+  const MAX_TURNS = 100;
+
   // CPU takes its turn automatically
   useEffect(() => {
     if (game && game.currentTurn === "cpu" && !game.winner) {
@@ -93,7 +90,15 @@ export function MaoGame() {
         setMessage(`CPU drew a card (${g.cpuHand.length} left)`);
       } else {
         const card = g.cpuHand[play.cardIndex];
-        const validation = validateMove(card, g.cpuHand, topCard, g.rules, "cpu", g.turnNumber, []);
+        const validation = validateMove(
+          card,
+          g.cpuHand,
+          topCard,
+          g.rules,
+          "cpu",
+          g.turnNumber,
+          [],
+        );
 
         g.cpuHand.splice(play.cardIndex, 1);
         g.cpuHandCount = g.cpuHand.length;
@@ -103,18 +108,36 @@ export function MaoGame() {
         if (validation.violations.length > 0) {
           g.cpuPenalties += 1;
           g.violations.push(validation.violations[0]);
-          setViolationFlash({ hint: validation.violations[0].ruleHint, by: "cpu" });
+          setViolationFlash({
+            hint: validation.violations[0].ruleHint,
+            by: "cpu",
+          });
           if (g.drawPile.length === 0) recycleDiscard(g);
           g.cpuHand.push(g.drawPile.pop()!);
           g.cpuHandCount = g.cpuHand.length;
         }
 
-        setMessage(`CPU played ${card.rank}${suitSym(card.suit)} (${g.cpuHand.length} left)`);
+        setMessage(
+          `CPU played ${card.rank}${suitSym(card.suit)} (${g.cpuHand.length} left)`,
+        );
       }
 
       // Check win
-      if (g.playerHand.length === 0) { g.winner = "player"; setGameOverMsg("🎉 You won!"); return g; }
-      if (g.cpuHand.length === 0) { g.winner = "cpu"; setGameOverMsg("😤 CPU wins!"); return g; }
+      if (g.turnNumber >= 100) {
+        g.winner = g.playerHand.length <= g.cpuHand.length ? "player" : "cpu";
+        setGameOverMsg(g.playerHand.length <= g.cpuHand.length ? "🏆 You win on cards!" : "😤 CPU wins on cards!");
+        return g;
+      }
+      if (g.playerHand.length === 0) {
+        g.winner = "player";
+        setGameOverMsg("🎉 You won!");
+        return g;
+      }
+      if (g.cpuHand.length === 0) {
+        g.winner = "cpu";
+        setGameOverMsg("😤 CPU wins!");
+        return g;
+      }
 
       g.turnNumber += 1;
       g.currentTurn = "player";
@@ -124,7 +147,8 @@ export function MaoGame() {
 
   const handlePlayCard = useCallback(() => {
     setGame((prev) => {
-      if (!prev || prev.currentTurn !== "player" || selectedCard === null) return prev;
+      if (!prev || prev.currentTurn !== "player" || selectedCard === null)
+        return prev;
 
       const g = { ...prev };
       g.playerHand = [...g.playerHand];
@@ -134,10 +158,21 @@ export function MaoGame() {
 
       const card = g.playerHand[selectedCard];
       const topCard = g.discardPile[g.discardPile.length - 1];
-      const validation = validateMove(card, g.playerHand, topCard, g.rules, "player", g.turnNumber, []);
+      const validation = validateMove(
+        card,
+        g.playerHand,
+        topCard,
+        g.rules,
+        "player",
+        g.turnNumber,
+        [],
+      );
 
       if (!validation.baseValid) {
-        setViolationFlash({ hint: "Card must match suit or rank", by: "player" });
+        setViolationFlash({
+          hint: "Card must match suit or rank",
+          by: "player",
+        });
         setMessage("❌ Doesn't match the discard pile!");
         setSelectedCard(null);
         return prev;
@@ -152,7 +187,10 @@ export function MaoGame() {
       if (validation.violations.length > 0) {
         g.playerPenalties += 1;
         g.violations.push(validation.violations[0]);
-        setViolationFlash({ hint: validation.violations[0].ruleHint, by: "player" });
+        setViolationFlash({
+          hint: validation.violations[0].ruleHint,
+          by: "player",
+        });
         if (g.drawPile.length === 0) recycleDiscard(g);
         g.playerHand.push(g.drawPile.pop()!);
       }
@@ -160,11 +198,19 @@ export function MaoGame() {
       setSelectedCard(null);
       setMessage(
         `You played ${card.rank}${suitSym(card.suit)}` +
-          (validation.violations.length > 0 ? " ⚠️ Rule broken!" : " ✓")
+          (validation.violations.length > 0 ? " ⚠️ Rule broken!" : " ✓"),
       );
 
-      if (g.playerHand.length === 0) { g.winner = "player"; setGameOverMsg("🎉 You won!"); return g; }
-      if (g.cpuHand.length === 0) { g.winner = "cpu"; setGameOverMsg("😤 CPU wins!"); return g; }
+      if (g.playerHand.length === 0) {
+        g.winner = "player";
+        setGameOverMsg("🎉 You won!");
+        return g;
+      }
+      if (g.cpuHand.length === 0) {
+        g.winner = "cpu";
+        setGameOverMsg("😤 CPU wins!");
+        return g;
+      }
 
       g.turnNumber += 1;
       g.currentTurn = "cpu";
@@ -186,7 +232,11 @@ export function MaoGame() {
       setMessage(`You drew: ${drawn.rank}${suitSym(drawn.suit)}`);
       setSelectedCard(null);
 
-      if (g.cpuHand.length === 0) { g.winner = "cpu"; setGameOverMsg("😤 CPU wins!"); return g; }
+      if (g.cpuHand.length === 0) {
+        g.winner = "cpu";
+        setGameOverMsg("😤 CPU wins!");
+        return g;
+      }
       g.turnNumber += 1;
       g.currentTurn = "cpu";
       return g;
@@ -226,10 +276,12 @@ export function MaoGame() {
           <h1 className="text-6xl font-black tracking-tight text-white">
             <span className="text-purple-400">Mao</span>
           </h1>
-          <p className="text-white/40 max-w-md mx-auto text-sm leading-relaxed">
+          <p className="text-white/60 max-w-md mx-auto text-sm leading-relaxed">
             The card game where{" "}
-            <span className="text-purple-300 font-semibold">nobody tells you the rules</span>.
-            An AI creates hidden rules. You discover them by breaking them.
+            <span className="text-purple-300 font-semibold">
+              nobody tells you the rules
+            </span>
+            . An AI creates hidden rules. You discover them by breaking them.
             First to empty their hand wins.
           </p>
           <button
@@ -244,36 +296,38 @@ export function MaoGame() {
   }
 
   const topCard = game.discardPile[game.discardPile.length - 1];
-  const canPlay = selectedCard !== null && canPlayBase(game.playerHand[selectedCard], topCard);
+  const canPlay =
+    selectedCard !== null &&
+    canPlayBase(game.playerHand[selectedCard], topCard);
   const isPlayerTurn = game.currentTurn === "player" && !game.winner;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950/15 to-gray-950 text-white flex flex-col">
       {/* Header */}
       <header className="border-b border-white/5 bg-black/30 backdrop-blur-md">
-        <div className="mx-auto flex h-12 max-w-4xl items-center justify-between px-4">
+        <div className="mx-auto flex  max-w-4xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <span className="text-sm">🃏</span>
-            <span className="text-sm font-bold">
+            <span className=" font-bold">
               <span className="text-purple-400">Mao</span> AI
             </span>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-              <span className="text-xs text-white/30 uppercase tracking-wider">
+              <span className="text-xs text-white/70 uppercase tracking-wider">
                 Turn {game.turnNumber}
               </span>
             </div>
             <button
               onClick={() => setShowRules(!showRules)}
-              className="text-xs text-white/30 hover:text-white/60 transition-colors uppercase tracking-wider"
+              className="text-xs text-white/70 hover:text-white/60 transition-colors uppercase tracking-wider"
             >
               {showRules ? "Hide" : "Show"} Rules
             </button>
             <button
               onClick={startGame}
-              className="rounded-full bg-white/5 px-3 py-1.5 text-sm text-white/50 hover:bg-white/10 hover:text-white/80 transition-all border border-white/5"
+              className="rounded-full bg-white/5 px-3 py-1.5 text-sm text-white/70 hover:bg-white/10 hover:text-white/80 transition-all border border-white/5"
             >
               New
             </button>
@@ -290,7 +344,10 @@ export function MaoGame() {
             </p>
             <div className="grid gap-1.5">
               {game.rules.map((r) => (
-                <div key={r.id} className="text-sm text-purple-300/60 font-mono">
+                <div
+                  key={r.id}
+                  className="text-sm text-purple-300/60 font-mono"
+                >
                   {r.description}
                 </div>
               ))}
@@ -303,7 +360,9 @@ export function MaoGame() {
       {violationFlash && (
         <div className="border-b border-red-500/20 bg-red-950/30 animate-in slide-in-from-top">
           <div className="mx-auto max-w-4xl px-4 py-2 text-center">
-            <span className="text-red-400 text-xs font-bold mr-2">🚨 RULE BROKEN</span>
+            <span className="text-red-400 text-xs font-bold mr-2">
+              🚨 RULE BROKEN
+            </span>
             <span className="text-red-300/70 text-xs italic">
               &ldquo;{violationFlash.hint}&rdquo;
             </span>
@@ -316,8 +375,9 @@ export function MaoGame() {
         <div className="bg-gradient-to-r from-purple-900/40 via-purple-800/30 to-purple-900/40 border-b border-purple-500/20">
           <div className="mx-auto max-w-4xl px-4 py-6 text-center">
             <p className="text-2xl font-black mb-1">{gameOverMsg}</p>
-            <p className="text-sm text-white/40 mb-3">
-              You broke {game.playerPenalties} rules &middot; CPU broke {game.cpuPenalties} rules
+            <p className="text-sm text-white/60 mb-3">
+              You broke {game.playerPenalties} rules &middot; CPU broke{" "}
+              {game.cpuPenalties} rules
             </p>
             <button
               onClick={startGame}
@@ -331,31 +391,34 @@ export function MaoGame() {
 
       {/* Main game area */}
       <div className="flex-1 mx-auto max-w-4xl w-full px-4 py-4 flex flex-col gap-3">
-
         {/* CPU area */}
         <div className="text-center">
           <div className="flex items-center justify-center mb-2">
             <div className="flex -space-x-3">
-              {Array.from({ length: Math.min(game.cpuHandCount, 9) }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-7 h-10 rounded-lg border border-white/5 bg-gradient-to-b from-purple-900/30 to-indigo-900/20 flex items-center justify-center"
-                >
-                  <span className="text-[9px] text-white/10">♠</span>
-                </div>
-              ))}
+              {Array.from({ length: Math.min(game.cpuHandCount, 9) }).map(
+                (_, i) => (
+                  <div
+                    key={i}
+                    className="w-7 h-10 rounded-lg border border-white/5 bg-gradient-to-b from-purple-900/30 to-indigo-900/20 flex items-center justify-center"
+                  >
+                    <span className="text-[9px] text-white/60">♠</span>
+                  </div>
+                ),
+              )}
               {game.cpuHandCount > 9 && (
-                <div className="w-7 h-10 rounded-lg border border-white/5 bg-white/5 flex items-center justify-center text-[9px] text-white/30">
+                <div className="w-7 h-10 rounded-lg border border-white/5 bg-white/5 flex items-center justify-center text-[9px] text-white/70">
                   +{game.cpuHandCount - 9}
                 </div>
               )}
             </div>
           </div>
           <div className="flex items-center justify-center gap-2">
-            <span className="text-sm text-white/40">🤖 CPU</span>
-            <span className="text-sm text-white/20">({game.cpuHandCount})</span>
+            <span className="text-sm text-white/60">🤖 CPU</span>
+            <span className="text-sm text-white/60">({game.cpuHandCount})</span>
             {game.currentTurn === "cpu" && !game.winner && (
-              <span className="text-sm text-purple-400 animate-pulse">thinking...</span>
+              <span className="text-sm text-purple-400 animate-pulse">
+                thinking...
+              </span>
             )}
           </div>
         </div>
@@ -364,14 +427,16 @@ export function MaoGame() {
         <div className="flex items-center justify-center gap-4 py-3">
           {/* Draw pile */}
           <div className="flex flex-col items-center gap-1">
-            <div className="w-14 h-20 rounded-xl border border-white/5 bg-gradient-to-br from-purple-900/20 to-indigo-900/10 flex items-center justify-center shadow-inner">
-              <span className="text-lg text-white/10">🂠</span>
+            <div className="w-14 h-20 rounded-xl border border-white/10 bg-gradient-to-br from-purple-900/20 to-indigo-900/10 flex items-center justify-center shadow-inner">
+              <span className="text-2xl leading-none text-white/60">🂠</span>
             </div>
-            <span className="text-xs text-white/15">{game.drawPile.length}</span>
+            <span className="text-xs text-white/60">
+              {game.drawPile.length}
+            </span>
           </div>
 
           {/* Arrow */}
-          <div className="text-white/10 text-sm">→</div>
+          <div className="text-white/60 text-sm">→</div>
 
           {/* Discard pile top card */}
           <div className="flex flex-col items-center gap-1">
@@ -381,18 +446,20 @@ export function MaoGame() {
               <div className="absolute top-0.5 -left-0.5 w-14 h-20 rounded-xl bg-indigo-500/5" />
               <CardView card={topCard} faceUp />
             </div>
-            <span className="text-xs text-white/15">Discard</span>
+            <span className="text-sm text-white/60">Discard</span>
           </div>
         </div>
 
         {/* Status message */}
         {message && (
           <div className="text-center">
-            <p className={`text-sm transition-all duration-300 ${
-              message.includes("⚠️") || message.includes("❌")
-                ? "text-red-400/70"
-                : "text-white/40"
-            }`}>
+            <p
+              className={`text-sm transition-all duration-300 ${
+                message.includes("⚠️") || message.includes("❌")
+                  ? "text-red-400/70"
+                  : "text-white/60"
+              }`}
+            >
               {message}
             </p>
           </div>
@@ -456,34 +523,43 @@ export function MaoGame() {
                 ⚡ Discoveries ({game.violations.length})
               </p>
               <div className="space-y-1 max-h-24 overflow-y-auto">
-                {[...game.violations].reverse().slice(0, 8).map((v, i) => (
-                  <div
-                    key={`${v.turn}-${i}`}
-                    className={`text-sm leading-relaxed rounded-lg px-2.5 py-1 ${
-                      v.by === "player"
-                        ? "bg-red-500/5 border-l-2 border-red-500/20"
-                        : "bg-purple-500/5 border-l-2 border-purple-500/20"
-                    }`}
-                  >
-                    <span className="text-white/30 text-xs mr-1.5">
-                      #{v.turn}
-                    </span>
-                    <span className={v.by === "player" ? "text-red-300/60" : "text-purple-300/60"}>
-                      {v.by === "player" ? "You" : "CPU"}
-                    </span>
-                    <span className="text-white/30 mx-1">→</span>
-                    <span className="text-white/40 italic">
-                      &ldquo;{v.ruleHint}&rdquo;
-                    </span>
-                  </div>
-                ))}
+                {[...game.violations]
+                  .reverse()
+                  .slice(0, 8)
+                  .map((v, i) => (
+                    <div
+                      key={`${v.turn}-${i}`}
+                      className={`text-sm leading-relaxed rounded-lg px-2.5 py-1 ${
+                        v.by === "player"
+                          ? "bg-red-500/5 border-l-2 border-red-500/20"
+                          : "bg-purple-500/5 border-l-2 border-purple-500/20"
+                      }`}
+                    >
+                      <span className="text-white/70 text-xs mr-1.5">
+                        #{v.turn}
+                      </span>
+                      <span
+                        className={
+                          v.by === "player"
+                            ? "text-red-300/60"
+                            : "text-purple-300/60"
+                        }
+                      >
+                        {v.by === "player" ? "You" : "CPU"}
+                      </span>
+                      <span className="text-white/70 mx-1">→</span>
+                      <span className="text-white/60 italic">
+                        &ldquo;{v.ruleHint}&rdquo;
+                      </span>
+                    </div>
+                  ))}
               </div>
             </div>
           </div>
         )}
 
         {/* Penalty counter */}
-        <div className="text-center text-xs text-white/20 pb-2">
+        <div className="text-center text-xs text-white/50 pb-2">
           You: {game.playerPenalties} 🚫 &middot; CPU: {game.cpuPenalties} 🚫
         </div>
       </div>
@@ -492,7 +568,12 @@ export function MaoGame() {
 }
 
 function suitSym(suit: string): string {
-  const m: Record<string, string> = { spades: "♠", hearts: "♥", clubs: "♣", diamonds: "♦" };
+  const m: Record<string, string> = {
+    spades: "♠",
+    hearts: "♥",
+    clubs: "♣",
+    diamonds: "♦",
+  };
   return m[suit] || "";
 }
 
