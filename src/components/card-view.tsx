@@ -33,8 +33,8 @@ export function CardView({ card, faceUp = false, selected = false, small = false
       className={`relative ${w} ${h} rounded-xl border ${
         selected
           ? "border-purple-400 shadow-lg shadow-purple-500/30 scale-110 -translate-y-4"
-          : "border-white/15 shadow-lg shadow-black/30 hover:shadow-purple-500/15"
-      } bg-gradient-to-br from-white via-white to-gray-50 flex flex-col items-center justify-center transition-all duration-150 cursor-pointer select-none ${
+          : "border-gray-300 shadow-lg shadow-black/20 hover:shadow-purple-500/15"
+      } bg-gradient-to-br from-white via-white to-gray-100 flex flex-col items-center justify-center transition-all duration-150 cursor-pointer select-none ${
         isFace ? "ring-1 ring-purple-300/30" : ""
       } hover:-translate-y-2 active:scale-95`}
     >

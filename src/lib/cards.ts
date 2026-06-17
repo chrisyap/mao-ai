@@ -20,10 +20,10 @@ export const SUIT_SYMBOLS: Record<Suit, string> = {
 };
 
 export const SUIT_COLORS: Record<Suit, string> = {
-  spades: "text-white",
-  hearts: "text-red-400",
-  clubs: "text-white",
-  diamonds: "text-red-400",
+  spades: "text-gray-900",
+  hearts: "text-red-500",
+  clubs: "text-gray-900",
+  diamonds: "text-red-500",
 };
 
 export function createDeck(): Card[] {
