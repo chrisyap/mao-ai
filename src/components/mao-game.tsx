@@ -47,6 +47,7 @@ export function MaoGame() {
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [message, setMessage] = useState<string>("");
   const [gameOverMsg, setGameOverMsg] = useState<string>("");
+  const [showPaywall, setShowPaywall] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [violationFlash, setViolationFlash] = useState<{
     hint: string;
@@ -245,6 +246,17 @@ export function MaoGame() {
   }, []);
 
   const startGame = useCallback(async () => {
+    // Check daily limit
+    const today = new Date().toISOString().split("T")[0];
+    const gamesData = JSON.parse(localStorage.getItem("maoGames") || '{"date":"","count":0}');
+    const hasUnlimited = localStorage.getItem("maoUnlimited") === "true";
+
+    if (!hasUnlimited && gamesData.date === today && gamesData.count >= 1) {
+      setMessage("🎯 Free game used! Get unlimited for $3.99");
+      setShowPaywall(true);
+      return;
+    }
+
     const g = newGame();
     // Fetch rules from API (DeepSeek or fallback)
     try {
@@ -266,6 +278,14 @@ export function MaoGame() {
     }
     if (g.rules.length === 0) {
       g.rules = generateFallbackRules();
+    }
+    // Track daily game
+    if (!hasUnlimited) {
+      if (gamesData.date !== today) {
+        localStorage.setItem("maoGames", JSON.stringify({ date: today, count: 1 }));
+      } else {
+        localStorage.setItem("maoGames", JSON.stringify({ date: today, count: gamesData.count + 1 }));
+      }
     }
     setGame(g);
     setMessage("");
@@ -291,6 +311,18 @@ export function MaoGame() {
     }
   }, [cardPlayed]);
 
+  // Handle unlock redirect
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("unlocked") === "true") {
+        localStorage.setItem("maoUnlimited", "true");
+        window.history.replaceState({}, "", window.location.pathname);
+        setMessage("🎉 Unlimited unlocked! Enjoy!");
+      }
+    }
+  }, []);
+
   if (!game) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950/20 to-gray-950 flex items-center justify-center">
@@ -307,6 +339,7 @@ export function MaoGame() {
             . An AI creates hidden rules. You discover them by breaking them.
             First to empty their hand wins.
           </p>
+          <p className="text-white/30 text-xs">Free game resets daily</p>
           <button
             onClick={startGame}
             className="mt-4 inline-flex h-12 items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 px-8 font-bold text-white transition-all hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25 active:scale-95"
@@ -314,6 +347,40 @@ export function MaoGame() {
             🃏 Start Game
           </button>
         </div>
+
+        {/* Paywall modal */}
+        {showPaywall && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+            <div className="bg-zinc-900 border border-purple-500/20 rounded-2xl max-w-sm w-full p-8 text-center space-y-6 shadow-2xl">
+              <div className="text-5xl">🃏</div>
+              <h2 className="text-2xl font-black text-white">Unlimited Mao</h2>
+              <p className="text-white/50 text-sm leading-relaxed">
+                You've used your free game for today. Get unlimited games and
+                AI-generated rules for a one-time payment.
+              </p>
+              <div className="bg-purple-950/30 rounded-xl py-4 px-6 border border-purple-500/10">
+                <span className="text-3xl font-black text-white">$3.99</span>
+                <span className="text-white/30 text-sm ml-1">one-time</span>
+              </div>
+              <button
+                onClick={async () => {
+                  const res = await fetch("/api/checkout", { method: "POST" });
+                  const data = await res.json();
+                  if (data.url) window.location.href = data.url;
+                }}
+                className="w-full rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 py-3 font-bold text-white transition-all hover:shadow-lg hover:shadow-purple-500/25 active:scale-95"
+              >
+                🔓 Buy Lifetime Access
+              </button>
+              <button
+                onClick={() => setShowPaywall(false)}
+                className="text-white/30 text-xs hover:text-white/50 transition-colors"
+              >
+                Maybe later
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
