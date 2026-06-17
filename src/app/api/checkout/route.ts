@@ -26,7 +26,8 @@ export async function POST() {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch {
-    return NextResponse.json({ url: "/?unlocked=true" });
+  } catch (e) {
+    console.error("Stripe checkout error:", e);
+    return NextResponse.json({ url: "/?unlocked=true", error: String(e) });
   }
 }
