@@ -13,10 +13,10 @@ export function CardView({ card, faceUp = false, selected = false, small = false
   const symbol = SUIT_SYMBOLS[card.suit];
   const isFace = card.rank === "A" || card.rank === "K" || card.rank === "Q" || card.rank === "J";
 
-  const w = small ? "w-12" : "w-16";
-  const h = small ? "h-[72px]" : "h-24";
-  const rankSize = small ? "text-sm" : "text-lg";
-  const symSize = small ? "text-base" : "text-xl";
+  const w = small ? "w-14" : "w-20";
+  const h = small ? "h-[84px]" : "h-28";
+  const rankSize = small ? "text-base" : "text-xl";
+  const symSize = small ? "text-lg" : "text-2xl";
 
   if (!faceUp) {
     return (
@@ -50,7 +50,7 @@ export function CardView({ card, faceUp = false, selected = false, small = false
 
       {/* Mini rank in bottom-right */}
       <span
-        className={`absolute bottom-1 right-1.5 font-black leading-none text-[8px] ${color} rotate-180`}
+        className={`absolute bottom-1 right-1.5 font-black leading-none text-[10px] ${color} rotate-180`}
       >
         {card.rank}
       </span>

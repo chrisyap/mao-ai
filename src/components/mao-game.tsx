@@ -261,19 +261,19 @@ export function MaoGame() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-              <span className="text-[10px] text-white/30 uppercase tracking-wider">
+              <span className="text-xs text-white/30 uppercase tracking-wider">
                 Turn {game.turnNumber}
               </span>
             </div>
             <button
               onClick={() => setShowRules(!showRules)}
-              className="text-[10px] text-white/30 hover:text-white/60 transition-colors uppercase tracking-wider"
+              className="text-xs text-white/30 hover:text-white/60 transition-colors uppercase tracking-wider"
             >
               {showRules ? "Hide" : "Show"} Rules
             </button>
             <button
               onClick={startGame}
-              className="rounded-full bg-white/5 px-3 py-1 text-[11px] text-white/50 hover:bg-white/10 hover:text-white/80 transition-all border border-white/5"
+              className="rounded-full bg-white/5 px-3 py-1.5 text-sm text-white/50 hover:bg-white/10 hover:text-white/80 transition-all border border-white/5"
             >
               New
             </button>
@@ -285,12 +285,12 @@ export function MaoGame() {
       {showRules && (
         <div className="bg-purple-950/30 border-b border-purple-500/10">
           <div className="mx-auto max-w-4xl px-4 py-3">
-            <p className="text-[10px] text-purple-400/50 uppercase tracking-wider mb-2 font-semibold">
+            <p className="text-xs text-purple-400/50 uppercase tracking-wider mb-2 font-semibold">
               ⚡ Hidden Rules (spoiler)
             </p>
             <div className="grid gap-1.5">
               {game.rules.map((r) => (
-                <div key={r.id} className="text-[11px] text-purple-300/60 font-mono">
+                <div key={r.id} className="text-sm text-purple-300/60 font-mono">
                   {r.description}
                 </div>
               ))}
@@ -316,7 +316,7 @@ export function MaoGame() {
         <div className="bg-gradient-to-r from-purple-900/40 via-purple-800/30 to-purple-900/40 border-b border-purple-500/20">
           <div className="mx-auto max-w-4xl px-4 py-6 text-center">
             <p className="text-2xl font-black mb-1">{gameOverMsg}</p>
-            <p className="text-xs text-white/40 mb-3">
+            <p className="text-sm text-white/40 mb-3">
               You broke {game.playerPenalties} rules &middot; CPU broke {game.cpuPenalties} rules
             </p>
             <button
@@ -352,10 +352,10 @@ export function MaoGame() {
             </div>
           </div>
           <div className="flex items-center justify-center gap-2">
-            <span className="text-[11px] text-white/40">🤖 CPU</span>
-            <span className="text-[11px] text-white/20">({game.cpuHandCount})</span>
+            <span className="text-sm text-white/40">🤖 CPU</span>
+            <span className="text-sm text-white/20">({game.cpuHandCount})</span>
             {game.currentTurn === "cpu" && !game.winner && (
-              <span className="text-[11px] text-purple-400 animate-pulse">thinking..</span>
+              <span className="text-sm text-purple-400 animate-pulse">thinking...</span>
             )}
           </div>
         </div>
@@ -367,11 +367,11 @@ export function MaoGame() {
             <div className="w-14 h-20 rounded-xl border border-white/5 bg-gradient-to-br from-purple-900/20 to-indigo-900/10 flex items-center justify-center shadow-inner">
               <span className="text-lg text-white/10">🂠</span>
             </div>
-            <span className="text-[9px] text-white/15">{game.drawPile.length}</span>
+            <span className="text-xs text-white/15">{game.drawPile.length}</span>
           </div>
 
           {/* Arrow */}
-          <div className="text-white/10 text-xs">→</div>
+          <div className="text-white/10 text-sm">→</div>
 
           {/* Discard pile top card */}
           <div className="flex flex-col items-center gap-1">
@@ -381,14 +381,14 @@ export function MaoGame() {
               <div className="absolute top-0.5 -left-0.5 w-14 h-20 rounded-xl bg-indigo-500/5" />
               <CardView card={topCard} faceUp />
             </div>
-            <span className="text-[9px] text-white/15">Discard</span>
+            <span className="text-xs text-white/15">Discard</span>
           </div>
         </div>
 
         {/* Status message */}
         {message && (
           <div className="text-center">
-            <p className={`text-xs transition-all duration-300 ${
+            <p className={`text-sm transition-all duration-300 ${
               message.includes("⚠️") || message.includes("❌")
                 ? "text-red-400/70"
                 : "text-white/40"
@@ -435,7 +435,7 @@ export function MaoGame() {
                 >
                   📥 Draw Instead
                 </button>
-                <p className="text-[11px] text-red-400/50">Doesn&apos;t match</p>
+                <p className="text-sm text-red-400/50">Doesn&apos;t match</p>
               </div>
             ) : (
               <button
@@ -452,20 +452,20 @@ export function MaoGame() {
         {game.violations.length > 0 && (
           <div className="mt-auto pt-3">
             <div className="rounded-xl border border-white/5 bg-white/[0.015] p-3">
-              <p className="text-[10px] text-white/20 uppercase tracking-wider mb-2 font-semibold">
+              <p className="text-xs text-white/20 uppercase tracking-wider mb-2 font-semibold">
                 ⚡ Discoveries ({game.violations.length})
               </p>
               <div className="space-y-1 max-h-24 overflow-y-auto">
                 {[...game.violations].reverse().slice(0, 8).map((v, i) => (
                   <div
                     key={`${v.turn}-${i}`}
-                    className={`text-[11px] leading-relaxed rounded-lg px-2.5 py-1 ${
+                    className={`text-sm leading-relaxed rounded-lg px-2.5 py-1 ${
                       v.by === "player"
                         ? "bg-red-500/5 border-l-2 border-red-500/20"
                         : "bg-purple-500/5 border-l-2 border-purple-500/20"
                     }`}
                   >
-                    <span className="text-white/20 text-[9px] mr-1.5">
+                    <span className="text-white/30 text-xs mr-1.5">
                       #{v.turn}
                     </span>
                     <span className={v.by === "player" ? "text-red-300/60" : "text-purple-300/60"}>
@@ -483,7 +483,7 @@ export function MaoGame() {
         )}
 
         {/* Penalty counter */}
-        <div className="text-center text-[10px] text-white/10 pb-2">
+        <div className="text-center text-xs text-white/20 pb-2">
           You: {game.playerPenalties} 🚫 &middot; CPU: {game.cpuPenalties} 🚫
         </div>
       </div>

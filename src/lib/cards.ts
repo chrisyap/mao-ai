@@ -21,9 +21,9 @@ export const SUIT_SYMBOLS: Record<Suit, string> = {
 
 export const SUIT_COLORS: Record<Suit, string> = {
   spades: "text-gray-900",
-  hearts: "text-red-500",
+  hearts: "text-red-800",
   clubs: "text-gray-900",
-  diamonds: "text-red-500",
+  diamonds: "text-red-800",
 };
 
 export function createDeck(): Card[] {
