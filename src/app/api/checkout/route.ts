@@ -3,9 +3,11 @@ import Stripe from "stripe";
 
 export async function POST() {
   const stripeKey = process.env.STRIPE_SECRET_KEY;
+  const keyPresent = !!stripeKey;
+  const keyLen = stripeKey ? stripeKey.length : 0;
 
   if (!stripeKey) {
-    return NextResponse.json({ url: "/?unlocked=true" });
+    return NextResponse.json({ url: "/?unlocked=true", debug: "no key", keyPresent, keyLen });
   }
 
   try {
